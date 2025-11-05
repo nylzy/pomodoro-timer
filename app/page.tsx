@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next"
-import { Merritweather, Merriweather } from "next/font/google";
+import { Merriweather, Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({
   weight: ['400'],  // Monoton only has one weight
