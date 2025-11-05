@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next"
-import { Merriweather, Merriweather } from "next/font/google";
+import { Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({
-  weight: ['400'],  // Monoton only has one weight
+  weight: ['400'],
   subsets: ['latin'],
 });
 
