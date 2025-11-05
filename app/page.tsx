@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next"
+import { Merritweather, Merriweather } from "next/font/google";
+
+const merriweather = Merriweather({
+  weight: ['400'],  // Monoton only has one weight
+  subsets: ['latin'],
+});
 
 export default function Home() {
   const [minutes, setMinutes] = useState(25);
@@ -132,7 +138,7 @@ const playSound = () => {
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">⏱</span>
             </div>
-            <h1 className="text-2xl font-bold text-emerald-900">FocusFlow</h1>
+            <h1 className={`text-2xl font-bold text-emerald-900 ${merriweather.className}`}>PomoTomo</h1>
           </div>
           
           <div className="flex items-center gap-3">
@@ -261,10 +267,9 @@ const playSound = () => {
       {/* Information Section */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-emerald-900 mb-8 text-center">
-            How to Use FocusFlow
+          <h2 className="text-3xl font-normal text-emerald-700 mb-8 text-center">
+            How to use <span className={`font-bold text-emerald-900 ${merriweather.className}`}>PomoTomo</span>
           </h2>
-          
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {/* Step 1 */}
             <div className="text-center">
@@ -317,7 +322,7 @@ const playSound = () => {
 
       {/* Footer */}
       <footer className="py-8 px-4 bg-emerald-900 text-white text-center">
-        <p className="text-sm">Built with focus 🌿 | © 2024 FocusFlow</p>
+        <p className="text-sm">Built by Tom Nylund🌿 | © 2025 PomoTomo</p>
       </footer>
       <Analytics /> 
     </div>
