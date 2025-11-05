@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
-  const [minutes, setMinutes] = useState(0);
+  const [minutes, setMinutes] = useState(1);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<"work" | "break">("work");
