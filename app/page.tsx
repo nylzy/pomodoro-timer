@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
-  const [minutes, setMinutes] = useState(1);
+  const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<"work" | "break">("work");
@@ -319,6 +319,7 @@ const playSound = () => {
       <footer className="py-8 px-4 bg-emerald-900 text-white text-center">
         <p className="text-sm">Built with focus 🌿 | © 2024 FocusFlow</p>
       </footer>
+      <Analytics /> 
     </div>
   );
 }
