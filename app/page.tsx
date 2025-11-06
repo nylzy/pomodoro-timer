@@ -5,7 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({
-  weight: ['400'],
+  weight: ['400', '700'],
   subsets: ['latin'],
 });
 
@@ -16,10 +16,15 @@ export default function Home() {
   const [mode, setMode] = useState<"work" | "break">("work");
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [showBreakOption, setShowBreakOption] = useState(false);
+  
+  // NEW: Settings state
+  const [showSettings, setShowSettings] = useState(false);
+  const [workDuration, setWorkDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
 
   // Calculate progress percentage
   const getTotalSeconds = () => {
-    return mode === "work" ? 25 * 60 : 5 * 60;
+    return mode === "work" ? workDuration * 60 : breakDuration * 60;
   };
 
   const getRemainingSeconds = () => {
@@ -32,35 +37,31 @@ export default function Home() {
     return ((total - remaining) / total) * 100;
   };
 
-const playSound = () => {
-  
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  
-  // Play three notes in sequence for a chime effect
-  const playNote = (frequency: number, startTime: number) => {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+  const playSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    const playNote = (frequency: number, startTime: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = "sine";
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.6);
+    };
     
-    oscillator.frequency.value = frequency;
-    oscillator.type = "sine";
-    
-    // Quick attack, gradual decay (bell-like)
-    gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
-    
-    oscillator.start(startTime);
-    oscillator.stop(startTime + 0.6);
+    playNote(523.25, audioContext.currentTime);
+    playNote(659.25, audioContext.currentTime + 0.15);
+    playNote(783.99, audioContext.currentTime + 0.30);
   };
-  
-  // Three ascending notes: C-E-G chord (like a pleasant bell)
-  playNote(523.25, audioContext.currentTime);        // C note
-  playNote(659.25, audioContext.currentTime + 0.15); // E note
-  playNote(783.99, audioContext.currentTime + 0.30); // G note
-};
 
   // Countdown logic
   useEffect(() => {
@@ -86,14 +87,14 @@ const playSound = () => {
 
   const handleTimerComplete = () => {
     setIsRunning(false);
-    playSound(); // NEW: Play sound when timer completes!
+    playSound();
     
     if (mode === "work") {
       setSessionsCompleted(sessionsCompleted + 1);
       setShowBreakOption(true);
     } else {
       setMode("work");
-      setMinutes(25);
+      setMinutes(workDuration);
       setSeconds(0);
       setShowBreakOption(false);
     }
@@ -106,17 +107,17 @@ const playSound = () => {
   const resetTimer = () => {
     setIsRunning(false);
     if (mode === "work") {
-      setMinutes(25);
+      setMinutes(workDuration);
       setSeconds(0);
     } else {
-      setMinutes(5);
+      setMinutes(breakDuration);
       setSeconds(0);
     }
   };
 
   const startBreak = () => {
     setMode("break");
-    setMinutes(5);
+    setMinutes(breakDuration);
     setSeconds(0);
     setIsRunning(true);
   };
@@ -124,13 +125,82 @@ const playSound = () => {
   const skipBreak = () => {
     setIsRunning(false);
     setMode("work");
-    setMinutes(25);
+    setMinutes(workDuration);
     setSeconds(0);
     setShowBreakOption(false);
   };
 
+  // NEW: Save settings and close modal
+  const saveSettings = () => {
+    // Update current timer if not running
+    if (!isRunning) {
+      if (mode === "work") {
+        setMinutes(workDuration);
+      } else {
+        setMinutes(breakDuration);
+      }
+      setSeconds(0);
+    }
+    setShowSettings(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-200 to-teal-200">
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <h2 className="text-2xl font-bold text-emerald-900 mb-6">Timer Settings</h2>
+            
+            {/* Work Duration */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-emerald-900 mb-2">
+                Work Duration (minutes)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={workDuration}
+                onChange={(e) => setWorkDuration(Number(e.target.value))}
+                className="w-full px-4 py-3 border-2 border-emerald-200 rounded-lg focus:border-emerald-500 focus:outline-none text-lg font-bold text-gray-600"
+              />
+            </div>
+
+            {/* Break Duration */}
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-emerald-900 mb-2">
+                Break Duration (minutes)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={breakDuration}
+                onChange={(e) => setBreakDuration(Number(e.target.value))}
+                className="w-full px-4 py-3 border-2 border-emerald-200 rounded-lg focus:border-emerald-500 focus:outline-none text-lg font-bold text-gray-600"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={saveSettings}
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all shadow-lg"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-emerald-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -138,11 +208,16 @@ const playSound = () => {
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">⏱</span>
             </div>
-            <h1 className={`text-2xl font-bold text-emerald-900 ${merriweather.className}`}>PomoTomo</h1>
+            <h1 className={`text-2xl font-bold text-emerald-900 ${merriweather.className}`}>
+              PomoTomo
+            </h1>
           </div>
           
           <div className="flex items-center gap-3">
-            <button className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-semibold hover:bg-emerald-200 transition-all flex items-center gap-2">
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-semibold hover:bg-emerald-200 transition-all flex items-center gap-2"
+            >
               <span>⚙️</span>
               Settings
             </button>
@@ -171,7 +246,7 @@ const playSound = () => {
                   onClick={startBreak}
                   className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-all shadow-lg"
                 >
-                  Take Break (5 min)
+                  Take Break ({breakDuration} min)
                 </button>
                 <button
                   onClick={skipBreak}
@@ -259,7 +334,7 @@ const playSound = () => {
 
           {/* Bottom Info */}
           <div className="text-center text-emerald-700 text-sm">
-            {mode === "work" ? "25 minutes of focused work" : "5 minutes of rest"}
+            {mode === "work" ? `${workDuration} minutes of focused work` : `${breakDuration} minutes of rest`}
           </div>
         </div>
       </section>
@@ -268,8 +343,9 @@ const playSound = () => {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-normal text-emerald-700 mb-8 text-center">
-            How to use <span className={`font-bold text-emerald-900 ${merriweather.className}`}>PomoTomo</span>
+            How to Use <span className={`font-bold text-emerald-900 ${merriweather.className}`}>PomoTomo</span>
           </h2>
+          
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {/* Step 1 */}
             <div className="text-center">
