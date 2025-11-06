@@ -78,6 +78,13 @@ export default function Home() {
     localStorage.setItem('breakDuration', String(breakDuration));
   }, [workDuration, breakDuration]);
 
+  // Load data from database when user signs in
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchUserData();
+    }
+  }, [isSignedIn]);
+
   // Calculate progress percentage
   const getTotalSeconds = () => {
     return mode === "work" ? workDuration * 60 : breakDuration * 60;
@@ -166,6 +173,8 @@ export default function Home() {
       }
     });
     
+    saveSessionToDb(workDuration);
+
     setShowBreakOption(true);
   } else {
     setMode("work");
@@ -207,6 +216,9 @@ export default function Home() {
 
   // Save settings and close modal
   const saveSettings = () => {
+
+    saveSettingsToDb(workDuration, breakDuration);
+    
   // Update current timer if not running
   if (!isRunning) {
     if (mode === "work") {
@@ -217,6 +229,61 @@ export default function Home() {
     setSeconds(0);
   }
   setShowSettings(false);
+  };
+
+    // NEW: Fetch user data from database
+  const fetchUserData = async () => {
+    if (!isSignedIn) return;
+    
+    try {
+      const response = await fetch('/api/sessions');
+      const data = await response.json();
+      
+      if (data.sessionHistory) {
+        setSessionHistory(data.sessionHistory);
+        setSessionsCompleted(data.totalSessions);
+      }
+      
+      if (data.settings) {
+        setWorkDuration(data.settings.workDuration);
+        setBreakDuration(data.settings.breakDuration);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  // NEW: Save session to database
+  const saveSessionToDb = async (minutes: number) => {
+    if (!isSignedIn) return;
+    
+    try {
+      await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes })
+      });
+    } catch (error) {
+      console.error('Error saving session:', error);
+    }
+  };
+
+  // NEW: Save settings to database
+  const saveSettingsToDb = async (work: number, break_duration: number) => {
+    if (!isSignedIn) return;
+    
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          workDuration: work, 
+          breakDuration: break_duration 
+        })
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
   };
 
   return (
