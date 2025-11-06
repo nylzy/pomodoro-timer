@@ -532,7 +532,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold text-emerald-900 mb-2">Set Your Focus</h3>
               <p className="text-gray-600">
-                Click Start to begin a 25-minute focused work session. Eliminate distractions and dive deep into your task.
+                Click Start to begin a focused work session. Eliminate distractions and dive deep into your task.
               </p>
             </div>
 
