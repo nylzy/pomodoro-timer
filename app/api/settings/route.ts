@@ -23,7 +23,8 @@ export async function PUT(request: Request) {
 
     if (!user) {
       user = await prisma.user.create({
-        data: { clerkId: userId }
+        data: { clerkId: userId },
+        include: { settings: true },
       });
     }
 
